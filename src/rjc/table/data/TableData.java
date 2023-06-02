@@ -16,31 +16,38 @@
  *  along with this program.  If not, see http://www.gnu.org/licenses/    *
  **************************************************************************/
 
-package rjc.table;
+package rjc.table.data;
 
-import rjc.table.signal.ObservableDouble;
-import rjc.table.signal.ObservableInteger;
-import rjc.table.view.axis.AxisBase;
+/*************************************************************************************************/
+/*********************** Table data source (with default implementations) ************************/
+/*************************************************************************************************/
 
-public class Main
+public class TableData extends TableBase
 {
-  /******************************************** main *********************************************/
-  public static void main( String[] args )
+  /****************************************** getValue *******************************************/
+  public Object getValue( int columnIndex, int rowIndex )
   {
-    // entry point for demo application startup
-    Utils.trace( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JTableFX2 demo started ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-    Utils.trace( "JTableFX2 VERSION = '" + Utils.VERSION + "'", args );
+    // return header corner cell value
+    if ( columnIndex == HEADER && rowIndex == HEADER )
+      return "-";
 
-    ObservableInteger columnCount = new ObservableInteger( 5 );
-    ObservableDouble zoomFactor = new ObservableDouble( 1.0 );
+    // return row value for specified row index
+    if ( columnIndex == HEADER )
+      return "R" + rowIndex;
 
-    AxisBase axis = new AxisBase( columnCount.getReadOnly(), zoomFactor.getReadOnly() );
-    Utils.trace( axis.getAxisPixels() );
+    // return column value for specified column index
+    if ( rowIndex == HEADER )
+      return "C" + columnIndex;
 
-    columnCount.set( 7 );
-    Utils.trace( axis.getAxisPixels() );
+    // return cell value for specified cell index
+    return "{" + columnIndex + "," + rowIndex + "}";
+  }
 
-    Utils.trace( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ JTableFX2 demo ended ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+  /****************************************** setValue *******************************************/
+  public boolean setValue( int columnIndex, int rowIndex, Object newValue )
+  {
+    // returns true if cell value successfully set for specified cell index
+    return false;
   }
 
 }

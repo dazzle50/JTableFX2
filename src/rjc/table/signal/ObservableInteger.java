@@ -46,7 +46,8 @@ public class ObservableInteger implements ISignal
     @Override
     public String toString()
     {
-      return getClass().getSimpleName() + "@" + Integer.toHexString( hashCode() ) + "=" + this.get();
+      return getClass().getSimpleName() + "@" + Integer.toHexString( System.identityHashCode( this ) ) + "="
+          + this.get();
     }
   }
 
@@ -94,7 +95,7 @@ public class ObservableInteger implements ISignal
   public String toString()
   {
     // return class string
-    return getClass().getSimpleName() + "@" + Integer.toHexString( hashCode() ) + "=" + this.get();
+    return getClass().getSimpleName() + "@" + Integer.toHexString( System.identityHashCode( this ) ) + "=" + this.get();
   }
 
 }

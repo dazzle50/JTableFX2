@@ -16,7 +16,7 @@
  *  along with this program.  If not, see http://www.gnu.org/licenses/    *
  **************************************************************************/
 
-package rjc.table;
+package rjc.table.view.axis;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -31,33 +31,33 @@ import rjc.table.signal.ObservableInteger.ReadOnlyInteger;
 /***************** Base class for table X or Y axis with index to pixel mapping ******************/
 /*************************************************************************************************/
 
-public class Axis
+public class AxisBase
 {
   // axis index starts at 0 for table body, index of -1 is for axis header
-  final static public int             INVALID           = -2;
-  final static public int             HEADER            = -1;
-  final static public int             FIRSTCELL         = 0;
+  final static public int             INVALID               = -2;
+  final static public int             HEADER                = -1;
+  final static public int             FIRSTCELL             = 0;
 
   // count of body cells on axis
   private ReadOnlyInteger             m_count;
 
   // variables defining default & minimum cell size (width or height) equals pixels if zoom is 1.0
-  private int                         m_defaultSize     = 100;
-  private int                         m_minimumSize     = 20;
-  private int                         m_headerSize      = 50;
+  private int                         m_defaultSize         = 100;
+  private int                         m_minimumSize         = 20;
+  private int                         m_headerSize          = 50;
   private ReadOnlyDouble              m_zoom;
 
-  // exceptions to default size, -ve means hidden
-  final private Map<Integer, Integer> m_sizeExceptions  = new HashMap<>();
+  // exceptions to default size
+  final private Map<Integer, Integer> m_sizeExceptions      = new HashMap<>();
 
   // cached cell index to start pixel coordinate
-  final private ArrayList<Integer>    m_cellStartCache  = new ArrayList<>();
+  final private ArrayList<Integer>    m_cellStartPixelCache = new ArrayList<>();
 
   // observable integer for cached axis size in pixels (includes header)
-  private ObservableInteger           m_axisPixelsCache = new ObservableInteger( INVALID );
+  private ObservableInteger           m_axisPixelsCache     = new ObservableInteger( INVALID );
 
   /**************************************** constructor ******************************************/
-  public Axis( ReadOnlyInteger count, ReadOnlyDouble zoom )
+  public AxisBase( ReadOnlyInteger count, ReadOnlyDouble zoom )
   {
     // check arguments
     if ( count == null || count.get() < 0 )
@@ -82,15 +82,15 @@ public class Axis
             m_sizeExceptions.remove( key );
 
       // truncate cell start cache if new size smaller
-      if ( new_count < m_cellStartCache.size() )
-        m_cellStartCache.subList( new_count, m_cellStartCache.size() ).clear();
+      if ( new_count < m_cellStartPixelCache.size() )
+        m_cellStartPixelCache.subList( new_count, m_cellStartPixelCache.size() ).clear();
     } );
 
     // if zoom changes
     m_zoom.addListener( x ->
     {
       // clear cell start cache and axis size cache
-      m_cellStartCache.clear();
+      m_cellStartPixelCache.clear();
       m_axisPixelsCache.set( INVALID );
     } );
   }
@@ -130,6 +130,13 @@ public class Axis
     return (int) ( size * m_zoom.get() );
   }
 
+  /*************************************** isIndexVisible ****************************************/
+  public boolean isIndexVisible( int index )
+  {
+    // overload this function if row/column hiding is wanted
+    return true;
+  }
+
   /**************************************** getAxisPixels ****************************************/
   public int getAxisPixels()
   {
@@ -140,9 +147,11 @@ public class Axis
       int defaultCount = getCount() - m_sizeExceptions.size();
 
       int pixels = zoom( m_headerSize );
-      for ( int size : m_sizeExceptions.values() )
-        if ( size > 0 )
-          pixels += zoom( size );
+      for ( var exception : m_sizeExceptions.entrySet() )
+      {
+        if ( isIndexVisible( exception.getKey() ) )
+          pixels += zoom( exception.getValue() );
+      }
 
       m_axisPixelsCache.set( pixels + defaultCount * zoom( m_defaultSize ) );
     }
@@ -150,7 +159,8 @@ public class Axis
     return m_axisPixelsCache.get();
   }
 
-  public ReadOnlyInteger getAxisPixelsReadOnly()
+  /************************************ getAxisPixelsProperty ************************************/
+  public ReadOnlyInteger getAxisPixelsProperty()
   {
     // return return read-only version of axis pixels
     return m_axisPixelsCache.getReadOnly();
