@@ -21,6 +21,8 @@ package rjc.table.signal;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javafx.application.Platform;
+
 /*************************************************************************************************/
 /******************* Interface for signal senders with default implementation ********************/
 /*************************************************************************************************/
@@ -38,6 +40,15 @@ public interface ISignal
       var list = m_listeners.get( signaller );
       if ( list != null )
         list.forEach( ( listener ) -> listener.slot( objects ) );
+    }
+
+    /**************************************** signalLater ****************************************/
+    private static void signalLater( ISignal signaller, Object[] objects )
+    {
+      // send signal objects using Platform.runLater to each listener registered with specified signal sender
+      var list = m_listeners.get( signaller );
+      if ( list != null )
+        list.forEach( ( listener ) -> Platform.runLater( () -> listener.slot( objects ) ) );
     }
 
     /*************************************** addListener *****************************************/
@@ -84,6 +95,13 @@ public interface ISignal
   {
     // default implementation for sending immediate signal to listeners
     SignalHelper.signal( this, objects );
+  }
+
+  /***************************************** signalLater *****************************************/
+  default void signalLater( Object... objects )
+  {
+    // default implementation for sending delayed signal to listeners
+    SignalHelper.signalLater( this, objects );
   }
 
   /***************************************** addListener *****************************************/
